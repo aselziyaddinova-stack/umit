@@ -1,0 +1,947 @@
+<!doctype html>
+<html lang="kk">
+ <head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>UmitApp – сен жалғыз емессің</title>
+  <script src="/_sdk/element_sdk.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-database.js"></script>
+  <style>
+        body {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: Arial, sans-serif;
+            background-color: #1E1E2E;
+            color: white;
+            line-height: 1.6;
+            min-height: 100%;
+        }
+        html {
+            height: 100%;
+        }
+        * {
+            box-sizing: border-box;
+        }
+        .container {
+            max-width: 100%;
+            padding: 20px;
+            margin: 0 auto;
+        }
+        header {
+            text-align: right;
+            padding: 20px 0;
+        }
+        .site-title {
+            font-size: 2.5em;
+            font-weight: bold;
+            color: white;
+            margin: 0;
+            line-height: 1.2;
+        }
+        .tagline {
+            font-size: 1.2em;
+            color: #B0B0B0;
+            margin: 5px 0;
+        }
+        .welcome-section {
+            text-align: center;
+            margin: 30px 0;
+        }
+        h2 {
+            color: white;
+            font-size: 1.5em;
+            margin-bottom: 10px;
+        }
+        .subtitle {
+            color: #B0B0B0;
+            margin-bottom: 30px;
+            font-size: 1em;
+        }
+        .main-buttons {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            margin: 30px 0;
+        }
+        .main-btn {
+            background: #4A90E2;
+            color: white;
+            border: none;
+            border-radius: 20px;
+            padding: 15px 20px;
+            font-size: 1.1em;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 4px 15px rgba(74, 144, 226, 0.3);
+        }
+        .main-btn:hover {
+            background: #357ABD;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(74, 144, 226, 0.4);
+        }
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            z-index: 1000;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+        .modal.show {
+            opacity: 1;
+        }
+        .modal-content {
+            background: white;
+            color: #333;
+            margin: 5% auto;
+            padding: 20px;
+            border-radius: 15px;
+            width: 90%;
+            max-width: 500px;
+            max-height: 80%;
+            overflow-y: auto;
+            position: relative;
+        }
+        .close {
+            position: absolute;
+            right: 15px;
+            top: 15px;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+            color: #999;
+        }
+        .close:hover {
+            color: #333;
+        }
+        .chat-container {
+            height: 300px;
+            overflow-y: auto;
+            border: 1px solid #ddd;
+            border-radius: 10px;
+            padding: 15px;
+            margin: 15px 0;
+            background: #f9f9f9;
+        }
+        .chat-bubble {
+            margin: 10px 0;
+            padding: 10px 15px;
+            border-radius: 15px;
+            max-width: 80%;
+            animation: fadeIn 0.3s;
+            word-wrap: break-word;
+        }
+        .chat-bubble.ai {
+            background: #E8F4FD;
+            margin-right: auto;
+            border-bottom-left-radius: 5px;
+        }
+        .chat-bubble.user {
+            background: #4A90E2;
+            color: white;
+            margin-left: auto;
+            border-bottom-right-radius: 5px;
+        }
+        .chat-bubble.community {
+            background: #FFE8D6;
+            margin-right: auto;
+            border-bottom-left-radius: 5px;
+        }
+        .chat-bubble.community .username {
+            font-weight: bold;
+            color: #FF8C42;
+            font-size: 0.9em;
+            margin-bottom: 3px;
+        }
+        .avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: #FF8C42;
+            display: inline-block;
+            margin-right: 10px;
+            vertical-align: middle;
+        }
+        .chat-input {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+        }
+        .chat-input input {
+            flex: 1;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 20px;
+            outline: none;
+        }
+        .chat-input button {
+            background: #4A90E2;
+            color: white;
+            border: none;
+            border-radius: 20px;
+            padding: 10px 20px;
+            cursor: pointer;
+        }
+        .chat-input button:hover {
+            background: #357ABD;
+        }
+        .emotion-section {
+            text-align: center;
+            margin: 30px 0;
+        }
+        .emoji-row {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin: 20px 0;
+            flex-wrap: wrap;
+        }
+        .emoji {
+            font-size: 2em;
+            cursor: pointer;
+            transition: transform 0.2s;
+            padding: 10px;
+            border-radius: 50%;
+        }
+        .emoji:hover {
+            transform: scale(1.2);
+            background: rgba(255, 255, 255, 0.1);
+        }
+        .emotion-tips {
+            text-align: left;
+            margin: 20px 0;
+        }
+        .emotion-tip {
+            display: none;
+            background: rgba(255, 255, 255, 0.1);
+            padding: 15px;
+            border-radius: 10px;
+            margin: 10px 0;
+            animation: fadeIn 0.5s;
+        }
+        .section {
+            margin: 30px 0;
+        }
+        .section h3 {
+            color: white;
+            font-size: 1.3em;
+            margin-bottom: 15px;
+        }
+        .section ul {
+            list-style: none;
+            padding: 0;
+        }
+        .section li {
+            background: rgba(255, 255, 255, 0.1);
+            margin: 10px 0;
+            padding: 12px 15px;
+            border-radius: 8px;
+            border-left: 4px solid #4A90E2;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+        .section li:hover {
+            background: rgba(255, 255, 255, 0.15);
+        }
+        .subsection {
+            display: none;
+            margin-top: 20px;
+            padding: 15px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 10px;
+            animation: fadeIn 0.5s;
+        }
+        .section li.active .subsection {
+            display: block;
+        }
+        .subsection h4 {
+            color: #4A90E2;
+            font-size: 1.1em;
+            margin-bottom: 10px;
+        }
+        .subsection p {
+            margin: 10px 0;
+            color: #D0D0D0;
+        }
+        .subsection ul {
+            list-style-type: disc;
+            padding-left: 20px;
+        }
+        .subsection li {
+            background: none;
+            border: none;
+            padding: 5px 0;
+            margin: 0;
+            cursor: default;
+        }
+        .subsection li:hover {
+            background: none;
+        }
+        .emergency-numbers {
+            text-align: center;
+            margin: 20px 0;
+        }
+        .emergency-number {
+            display: inline-block;
+            margin: 15px 20px;
+            text-align: center;
+        }
+        .emergency-number a {
+            font-size: 2em;
+            color: #4A90E2;
+            font-weight: bold;
+            text-decoration: none;
+            display: block;
+            transition: color 0.3s;
+        }
+        .emergency-number a:hover {
+            color: #357ABD;
+        }
+        .emergency-number .description {
+            font-size: 0.8em;
+            color: #B0B0B0;
+            margin-top: 5px;
+        }
+        .diary-section {
+            margin: 30px 0;
+        }
+        .diary-form {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+        .diary-form textarea {
+            width: 100%;
+            min-height: 120px;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 10px;
+            font-size: 1em;
+            font-family: Arial, sans-serif;
+            resize: vertical;
+            outline: none;
+            background: white;
+            color: #333;
+        }
+        .diary-form button {
+            background: #4A90E2;
+            color: white;
+            border: none;
+            border-radius: 20px;
+            padding: 12px 30px;
+            font-size: 1em;
+            cursor: pointer;
+            margin-top: 10px;
+            transition: all 0.3s;
+        }
+        .diary-form button:hover {
+            background: #357ABD;
+            transform: translateY(-2px);
+        }
+        .diary-entries {
+            margin-top: 20px;
+        }
+        .diary-entry {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 15px;
+            border-left: 4px solid #4A90E2;
+            animation: fadeIn 0.5s;
+        }
+        .diary-entry .date {
+            color: #B0B0B0;
+            font-size: 0.9em;
+            margin-bottom: 8px;
+        }
+        .diary-entry .content {
+            color: white;
+            line-height: 1.6;
+        }
+        .diary-entry .delete-btn {
+            background: #E74C3C;
+            color: white;
+            border: none;
+            border-radius: 15px;
+            padding: 5px 15px;
+            font-size: 0.85em;
+            cursor: pointer;
+            margin-top: 10px;
+            transition: background 0.3s;
+        }
+        .diary-entry .delete-btn:hover {
+            background: #C0392B;
+        }
+        footer {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 20px;
+            text-align: center;
+            margin-top: 40px;
+            border-radius: 10px;
+        }
+        .burst-emoji {
+            position: fixed;
+            font-size: 1.5em;
+            pointer-events: none;
+            z-index: 9999;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes bottomToLeft {
+            0% {
+                transform: scale(0) rotate(0deg) translateX(0) translateY(0);
+                opacity: 1;
+            }
+            20% {
+                transform: scale(1.2) rotate(90deg) translateX(-20px) translateY(-20px);
+                opacity: 1;
+            }
+            100% {
+                transform: scale(0.8) rotate(360deg) translateX(-100vw) translateY(-50px);
+                opacity: 0;
+            }
+        }
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+        @keyframes bounce {
+            0%, 20%, 50%, 80%, 100% { transform: translateY(0); }
+            40% { transform: translateY(-10px); }
+            60% { transform: translateY(-5px); }
+        }
+        .pulse { animation: pulse 2s infinite; }
+        .bounce { animation: bounce 1s infinite; }
+        .glow { filter: brightness(1.3); }
+        @media (max-width: 768px) {
+            .container {
+                padding: 15px;
+            }
+          
+            .site-title {
+                font-size: 2em;
+            }
+            .tagline {
+                font-size: 1em;
+            }
+          
+            h2 {
+                font-size: 1.3em;
+            }
+          
+            .modal-content {
+                margin: 10% auto;
+                width: 95%;
+            }
+          
+            .emoji {
+                font-size: 1.5em;
+                padding: 5px;
+            }
+            .emergency-number {
+                margin: 10px 10px;
+            }
+            .emergency-number a {
+                font-size: 1.5em;
+            }
+        }
+    </style>
+  <style>@view-transition { navigation: auto; }</style>
+  <script src="/_sdk/data_sdk.js" type="text/javascript"></script>
+  <script src="https://cdn.tailwindcss.com" type="text/javascript"></script>
+ </head>
+ <body>
+  <div class="container">
+   <header>
+    <h1 class="site-title" id="app-title">UmitApp</h1>
+    <p class="tagline" id="tagline-1">Сен жалғыз емессің</p>
+    <p class="tagline" id="tagline-2">Үміт бар</p>
+   </header>
+   <main>
+    <section class="welcome-section">
+     <h2 id="welcome-message">Сәлем, дос!</h2>
+     <p class="subtitle" id="subtitle-text">Тегін көмек алатын батырмалар арқылы қажетті көмек табыңыз.</p>
+     <div class="main-buttons"><button class="main-btn" onclick="openModal('helpModal')">💬 Көмек сұрау</button> <button class="main-btn" onclick="openModal('psychModal')">🧠 Психологиялық байланыс</button> <button class="main-btn" onclick="openModal('communityModal')">👥 Қауымдастық чаты</button> <button class="main-btn" onclick="openModal('sosModal')">🆘 Шұғыл байланыс (SOS)</button>
+     </div>
+    </section>
+    <section class="section" id="bilimger">
+     <h3>Білімгер</h3>
+     <ul>
+      <li onclick="toggleSubsection(event)">💡 Психологиялық көмек қалай алуға болады
+        <div class="subsection">
+          <h4>Психологиялық көмек алу жолдары</h4>
+          <p>Психологиялық қолдау – сіздің эмоционалдық әл-ауқатыңызды сақтаудың маңызды бөлігі. Қазақстанда тегін және ақылы қызметтер бар.</p>
+          <ul>
+            <li>Тегін консультациялар: Денсаулық сақтау министрлігінің психологиялық орталықтарына хабарласыңыз (мысалы, 111 нөмірі арқылы).</li>
+            <li>Онлайн платформалар: Біздің чатта немесе басқа апптарда анонимді сөйлесу мүмкіндігі.</li>
+            <li>Мамандар: Психолог немесе психотерапевтке жүгініңіз – алғашқы кездесу тегін болуы мүмкін.</li>
+            <li>Кеңес: Достарыңызбен немесе қауымдастықпен бөлісіңіз, бірақ кәсіби көмекке жүгінуді ұмытпаңыз.</li>
+          </ul>
+        </div>
+      </li>
+      <li onclick="toggleSubsection(event)">🆘 SOS – шұғыл байланыс
+        <div class="subsection">
+          <h4>Шұғыл көмек қажет болса</h4>
+          <p>Егер сіз қауіпті сезінсеңіз немесе шұғыл қолдау қажет болса, дереу хабарласыңыз. Бұл қызметтер тәулік бойы жұмыс істейді.</p>
+          <ul>
+            <li>103 – Жедел жәрдем: Физикалық немесе психикалық дағдарыс үшін.</li>
+            <li>111 – Отбасылық телефон: Эмоционалдық қолдау және кеңес.</li>
+            <li>102 – Полиция: Қауіпті жағдайлар үшін, мысалы, зорлық-зомбылық.</li>
+            <li>Кеңес: Телефонды басыңыз – қоңырау шалу оңай және жылдам.</li>
+          </ul>
+        </div>
+      </li>
+      <li onclick="toggleSubsection(event)">📚 Мақалалар мен кеңестер
+        <div class="subsection">
+          <h4>Пайдалы мақалалар мен кеңестер</h4>
+          <p>Өз-өзіңізге көмектесу үшін осы кеңестерді оқыңыз. Олар сіздің күнделікті өміріңізді жеңілдетеді.</p>
+          <ul>
+            <li>Стрессті басқару: Терең тыныс алу жаттығуларын жасаңыз – 4 секунд дем алыңыз, 4 секунд ұстаңыз, 4 секунд шығарыңыз.</li>
+            <li>Эмоцияларды реттеу: Күнделік жүргізіңіз, ойларыңызды жазыңыз.</li>
+            <li>Денсаулық: Дұрыс тамақтану, ұйқы және спорт – психикалық әл-ауқаттың негізі.</li>
+            <li>Ресурстар: Қазақстандық психологиялық сайттардан мақалалар оқыңыз, мысалы, Минздравтың ресми беттері.</li>
+          </ul>
+        </div>
+      </li>
+      <li onclick="toggleSubsection(event)">👥 Қауымдастық (қауіпсіз орта)
+        <div class="subsection">
+          <h4>Қауымдастықта қолдау табыңыз</h4>
+          <p>Біздің қауымдастық – анонимді және қауіпсіз орта. Басқалармен бөлісіңіз, тәжірибе алмасыңыз.</p>
+          <ul>
+            <li>Чат: Анонимді сөйлесу, қолдау алу.</li>
+            <li>Қауіпсіздік: Барлық хабарламалар модерацияланады, зиянды мазмұн жойылады.</li>
+            <li>Пайда: Басқалардың әңгімелерінен шабыт алыңыз, жалғыз емес екеніңізді түсініңіз.</li>
+            <li>Кеңес: Құрметті болыңыз, басқалардың сезімдерін құрметтеңіз.</li>
+          </ul>
+        </div>
+      </li>
+      <li onclick="toggleSubsection(event)">⚖️ Құқықтық қауіпсіздік және визуализация
+        <div class="subsection">
+          <h4>Құқықтық қауіпсіздік туралы</h4>
+          <p>Қазақстан заңнамасы суицидке байланысты мәселелерді қатаң қарастырады. Бұл ақпарат сіздің құқықтарыңызды қорғауға көмектеседі. Заң сіздің қауіпсіздігіңіз үшін жұмыс істейді.</p>
+          <h4>1. Жалпы ереже — “Өзін-өзі өлтіруге итермелеу” (Қылмыстық Кодекс)</h4>
+          <ul>
+            <li>Қазақстан Республикасының Қылмыстық кодексінде 105-бап («Суицидке итермелеу») қарастырылған.</li>
+            <li>Бұл бап адамның өз-өзіне қол жұмсауына әкелейін деп, оны қорқыту, ұрып-соғу немесе қоғамдық ар-наразылық арқылы моральдық төмендету арқылы әрекет жасауды қамтиды.</li>
+            <li>Егер оған қосымша ауырған “тәуелділік” болса (мысалы, құрбан сотқар адамға материалдық немесе басқа да тәуелді болса), жаза қаталданады.</li>
+            <li>Егер осындай әрекеттер кәмелетке толмаған адамға жасалса, яғни балаға “итермеу” болса — бұл да қылмыстық жауапкершілікке тартылады.</li>
+            <li>Қосымша: Заң сізді қорғайды – егер сіз итермелеуге ұшырасаңыз, полицияға хабарласыңыз.</li>
+          </ul>
+          <h4>2. Мысал: Іс жүзінде қолданылуы</h4>
+          <ul>
+            <li>Мысалы, әскери бөлімде командир сол әскери қызметшіні жүйелі түрде қорлап, оның абыр-қанын түсіріп, білімсіздік пен тәуелділік арқылы суицидке әрекет жасауына итермелеген жағдай болған.</li>
+            <li>Бұл іс бойынша сот командирді 3 жыл шартты емес жазаға тартқан (“restriction of liberty” – “еркіндігін шектеу” жазасы қолданылған).</li>
+            <li>Қосымша: Мұндай жағдайларда дәлелдер жинаңыз және құқық қорғау органдарына жүгініңіз – бұл сіздің құқығыңыз.</li>
+          </ul>
+          <h4>3. Жаңа заңнамалық түзетулер — “пропаганда” (насихат) туралы бап</h4>
+          <ul>
+            <li>Жақында (2024 жылы) Қазақстанда “суицидті насихаттау” (пропаганда) үшін де әкімшілік немесе қылмыстық жауапкершілік енгізілген.</li>
+            <li>313-1-бап (“Пропаганда суициді”):</li>
+            <li>Ақпарат таратып, адамдарды суицидке итермелеу үшін — айып (200 айлық есептеу көрсеткіші негізінде).</li>
+            <li>Егер сол насихат суицид әрекетіне әкелсе: еркіндігін шектеу немесе түрме — 1 жылға дейін.</li>
+            <li>Ал егер сол насихат салдарынан адам қайтыс болса — 3-тен 5 жылға дейінгі түрме мерзімі қарастырылған.</li>
+            <li>Бұл түзетулер суицид проблемасын алдын алу мақсатында жасалған.</li>
+            <li>Қосымша: Интернетте зиянды мазмұнды көргенде, оны хабарлаңыз – бұл қоғамдық қауіпсіздікке үлес қосады.</li>
+          </ul>
+          <h4>4. Қылмыстық құқықтық талдау (құқықтық қауіпсіздік тұрғысынан)</h4>
+          <ul>
+            <li>Суицид өзі заңда тыйым салынған емес — яғни өзімен-өзі іс жасау (өзіне қол жұмсау) үшін адамға автоматты түрде қылмыстық жауапкершілік қойылмайды. Заң “өзіне-өзі қол жұмсауды” емес, “адамды оны істеуге итермелеуді” қарастырады.</li>
+            <li>Бірақ егер біреу басқа адамды мақсатты түрде қорқытып, қорлап, моральдық тұрғыда басып, соның салдарынан ол адам суицидке немесе суицид әрекетіне барады — бұл қылмыс.</li>
+            <li>Заңды қолданғанда “себеп-салдар байланысы” өте маңызды: яғни “итерушінің әрекеті сол адамның суицидіне немесе әрекетіне нақты тікелей себеп болды ма” — сот бұл байланысты дәлелдеуі тиіс.</li>
+            <li>Қылмыстық жауапкершілік субъективтік жағына (яғни істеген адамның ниетіне) байланысты: заң бойынша бұл “жанама ниет” болуы мүмкін — яғни ітеруші адамның өз әрекеттері суицидке әкелетінін болжайды және оны мүмкіндік ретінде “қолдайды” немесе салдарынан бей-қауіпті қарамайды.</li>
+            <li>Қосымша: Визуализация: Өзіңізді қорғалған сезіну үшін, заңның сіздің жағыңызда екенін елестетіңіз. Бұл эмоционалдық күш береді.</li>
+          </ul>
+        </div>
+      </li>
+     </ul>
+    </section>
+    <section class="section">
+     <h3>Құпия көмек</h3>
+     <p>📞 Семім телефон (Қазақстан)</p>
+     <div class="emergency-numbers">
+      <div class="emergency-number"><a href="tel:111">111</a>
+       <div class="description">
+        Отбасылық телефон
+       </div>
+      </div>
+      <div class="emergency-number"><a href="tel:103">103</a>
+       <div class="description">
+        Жедел жәрдем
+       </div>
+      </div>
+     </div>
+    </section>
+    <section class="emotion-section">
+     <h3>Эмоцияларды көрсету</h3>
+     <p>Сезімдеріңізді белгілеңіз – анимация мен дыбыс шығарады</p>
+     <div class="emoji-row"><span class="emoji" onclick="selectEmotionWithBurst(event, 'happy', '😊')">😊</span> <span class="emoji" onclick="selectEmotionWithBurst(event, 'neutral', '😐')">😐</span> <span class="emoji" onclick="selectEmotionWithBurst(event, 'angry', '😠')">😠</span> <span class="emoji" onclick="selectEmotionWithBurst(event, 'sad', '😢')">😢</span> <span class="emoji" onclick="selectEmotionWithBurst(event, 'rage', '😡')">😡</span>
+     </div>
+     <div class="emotion-tips">
+      <div id="tip-happy" class="emotion-tip glow"><strong>😊 Бақытты:</strong> Бұл сезімді сақтаңыз! Достарыңызбен бөлісіңіз, жақсы сәттерді бағалаңыз.
+      </div>
+      <div id="tip-angry" class="emotion-tip"><strong>😡 Ашулылық:</strong> Ашуын басқару үшін уақыт алыңыз, терең дем алыңыз, дене жаттығуларын жасаңыз.
+      </div>
+      <div id="tip-sad" class="emotion-tip pulse"><strong>😢 Мұңлы:</strong> Мұңлы сәттер өтеді, сен жалғыз емессің. Біз қауымдастықтағы. Көңілділік.
+      </div>
+      <div id="tip-neutral" class="emotion-tip bounce"><strong>😐 Бейтарап:</strong> Күнделікті қысымды азайтыңыз. Терең тыныс алыңыз, қозғалыс жасаңыз, медитация жасаңыз.
+      </div>
+      <div id="tip-rage" class="emotion-tip"><strong>😠 Ашу:</strong> Қауіпсіздікті қамтамасыз етіңіз, досыңызбен сөйлесіңіз, кәсіби көмек алыңыз.
+      </div>
+     </div>
+    </section>
+    <section class="diary-section">
+     <h3>📔 Күнделік</h3>
+     <p>Күн сайынғы сезімдеріңізді жазыңыз</p>
+     <div class="diary-form"><textarea id="diaryInput" placeholder="Бүгін қалай сезіндіңіз? Не ойладыңыз?"></textarea> <button onclick="saveDiaryEntry()">💾 Сақтау</button>
+     </div>
+     <div class="diary-entries" id="diaryEntries"></div>
+    </section>
+   </main>
+   <footer>
+    <p>UmitApp – Құқықтық білімді ұсынатын цифрлық платформа. Егер эмоциялық қауымдастық керек болса – 103 немесе 111 хабарласыңыз.</p>
+   </footer>
+  </div><!-- Help Modal -->
+  <div id="helpModal" class="modal">
+   <div class="modal-content"><span class="close" onclick="closeModal('helpModal')">×</span>
+    <h3>💬 Көмек сұрау</h3>
+    <div class="avatar"></div>
+    <div class="chat-container" id="helpChat">
+     <div class="chat-bubble ai">
+      Сәлем! Мен сізге көмек беруге дайынмын. Қалай сезінесіз? Анонимді және қауіпсіз.
+     </div>
+    </div>
+    <div class="chat-input"><input type="text" id="helpInput" placeholder="Хабарыңызды жазыңыз..." onkeypress="handleChatInput(event, 'help')"> <button onclick="sendMessage('help')">Жіберу</button>
+    </div>
+   </div>
+  </div><!-- Psychology Modal -->
+  <div id="psychModal" class="modal">
+   <div class="modal-content"><span class="close" onclick="closeModal('psychModal')">×</span>
+    <h3>🧠 Психологиялық байланыс</h3>
+    <div class="avatar"></div>
+    <div class="chat-container" id="psychChat">
+     <div class="chat-bubble ai">
+      Сәлем! Мен – сіздің қолдаушыңыз. Не мазалайды? Мен мұндамын, сіз жалғыз емессіз.
+     </div>
+    </div>
+    <div class="chat-input"><input type="text" id="psychInput" placeholder="Сезімдеріңізді бөлісіңіз..." onkeypress="handleChatInput(event, 'psych')"> <button onclick="sendMessage('psych')">Жіберу</button>
+    </div>
+   </div>
+  </div><!-- Community Chat Modal -->
+  <div id="communityModal" class="modal">
+   <div class="modal-content"><span class="close" onclick="closeModal('communityModal')">×</span>
+    <h3>👥 Қауымдастық чаты</h3>
+    <p style="color: #666; font-size: 0.9em;">Анонимді қауіпсіз орта. Басқа пайдаланушылармен сөйлесіңіз.</p>
+    <div class="chat-container" id="communityChat">
+    </div>
+    <div class="chat-input"><input type="text" id="communityInput" placeholder="Хабарыңызды жазыңыз..." onkeypress="handleChatInput(event, 'community')"> <button onclick="sendMessage('community')">Жіберу</button>
+    </div>
+   </div>
+  </div><!-- SOS Modal -->
+  <div id="sosModal" class="modal">
+   <div class="modal-content"><span class="close" onclick="closeModal('sosModal')">×</span>
+    <h3>🆘 Шұғыл байланыс (SOS)</h3>
+    <div class="emergency-numbers">
+     <p><strong>Шұғыл көмек телефондары:</strong></p>
+     <div class="emergency-number"><a href="tel:111">111</a>
+      <div class="description">
+       Отбасылық телефон (Қазақстан)
+      </div>
+     </div>
+     <div class="emergency-number"><a href="tel:103">103</a>
+      <div class="description">
+       Жедел жәрдем
+      </div>
+     </div>
+     <div class="emergency-number"><a href="tel:102">102</a>
+      <div class="description">
+       Полиция
+      </div>
+     </div>
+    </div>
+    <p style="color: #666; margin-top: 20px; text-align: center;">Номерді басыңыз – телефон қосымшасы ашылады</p>
+   </div>
+  </div>
+  <script>
+        const defaultConfig = {
+            app_title: "UmitApp",
+            tagline_1: "Сен жалғыз емессің",
+            tagline_2: "Үміт бар",
+            welcome_message: "Сәлем, дос!",
+            subtitle_text: "Тегін көмек алатын батырмалар арқылы қажетті көмек табыңыз."
+        };
+        const aiResponses = {
+            help: [
+                "Мен сізді түсінемін. Бұл қиын кезең, бірақ сіз мықтысыз.",
+                "Сіздің сезімдеріңіз маңызды. Қалай көмек бере аламын?",
+                "Сіз дұрыс жерге келдіңіз. Мен сізбен бірге.",
+                "Бұл қадам жасау үшін батылдық керек болды. Мақтанамын сізбен.",
+                "Сіздің қауіпсіздігіңіз – біздің басты мақсатымыз."
+            ],
+            psych: [
+                "Сезімдеріңізді бөлісу – маңызды қадам. Мен тыңдап отырмын.",
+                "Сіз жалғыз емессіз. Көптеген адамдар осындай жағдайдан өтеді.",
+                "Өзіңізге қамқорлық жасау – күш белгісі, әлсіздік емес.",
+                "Сіздің тәжірибеңіз дұрыс. Сезімдеріңіз заңды.",
+                "Біз қадам сайын жүреміз. Асықпаңыз."
+            ]
+        };
+        // Firebase Config - Замените на свои данные из Firebase Console
+        const firebaseConfig = {
+            apiKey: "YOUR_API_KEY",
+            authDomain: "YOUR_PROJECT.firebaseapp.com",
+            databaseURL: "https://YOUR_PROJECT-default-rtdb.firebaseio.com",
+            projectId: "YOUR_PROJECT",
+            storageBucket: "YOUR_PROJECT.appspot.com",
+            messagingSenderId: "YOUR_SENDER_ID",
+            appId: "YOUR_APP_ID"
+        };
+        firebase.initializeApp(firebaseConfig);
+        const database = firebase.database();
+        const communityMessagesRef = database.ref('community_messages');
+        let communityInitialized = false;
+        const getCommunityUsername = () => {
+            let uname = localStorage.getItem('community_username');
+            if (!uname) {
+                uname = 'Анонимді-' + Math.floor(Math.random() * 10000);
+                localStorage.setItem('community_username', uname);
+            }
+            return uname;
+        };
+        // Generate random anonymous username for AI responses (if needed)
+        function getRandomUsername() {
+            return 'Анонимді-' + Math.floor(Math.random() * 1000);
+        }
+        function openModal(modalId) {
+            const modal = document.getElementById(modalId);
+            modal.style.display = 'block';
+            setTimeout(() => modal.classList.add('show'), 10);
+            if (modalId === 'communityModal' && !communityInitialized) {
+                const chat = document.getElementById('communityChat');
+                chat.innerHTML = '';
+                communityMessagesRef.orderByChild('timestamp').on('child_added', (snapshot) => {
+                    const msg = snapshot.val();
+                    const bubble = document.createElement('div');
+                    const isOwn = msg.username === getCommunityUsername();
+                    bubble.className = 'chat-bubble ' + (isOwn ? 'user' : 'community');
+                    if (!isOwn) {
+                        const usernameDiv = document.createElement('div');
+                        usernameDiv.className = 'username';
+                        usernameDiv.textContent = msg.username;
+                        bubble.appendChild(usernameDiv);
+                    }
+                    const text = document.createTextNode(msg.text);
+                    bubble.appendChild(text);
+                    chat.appendChild(bubble);
+                    chat.scrollTop = chat.scrollHeight;
+                });
+                communityInitialized = true;
+            }
+        }
+        function closeModal(modalId) {
+            const modal = document.getElementById(modalId);
+            modal.classList.remove('show');
+            setTimeout(() => modal.style.display = 'none', 300);
+        }
+        function handleChatInput(event, type) {
+            if (event.key === 'Enter') {
+                sendMessage(type);
+            }
+        }
+        function sendMessage(type) {
+            let inputId, chatId, bubbleClass;
+          
+            if (type === 'help') {
+                inputId = 'helpInput';
+                chatId = 'helpChat';
+                bubbleClass = 'user';
+            } else if (type === 'psych') {
+                inputId = 'psychInput';
+                chatId = 'psychChat';
+                bubbleClass = 'user';
+            } else if (type === 'community') {
+                inputId = 'communityInput';
+                chatId = 'communityChat';
+            }
+          
+            const input = document.getElementById(inputId);
+            const chat = document.getElementById(chatId);
+          
+            if (input.value.trim()) {
+                if (type === 'community') {
+                    // For community: send to Firebase
+                    const username = getCommunityUsername();
+                    const message = input.value.trim();
+                    communityMessagesRef.push({
+                        username: username,
+                        text: message,
+                        timestamp: Date.now()
+                    });
+                    input.value = '';
+                    chat.scrollTop = chat.scrollHeight;
+                } else {
+                    // Add user message for help/psych
+                    const userBubble = document.createElement('div');
+                    userBubble.className = 'chat-bubble ' + bubbleClass;
+                    userBubble.textContent = input.value;
+                    chat.appendChild(userBubble);
+                  
+                    // Clear input
+                    input.value = '';
+                  
+                    // Add AI response after delay
+                    setTimeout(() => {
+                        const responseBubble = document.createElement('div');
+                        responseBubble.className = 'chat-bubble ai';
+                        responseBubble.textContent = aiResponses[type][Math.floor(Math.random() * aiResponses[type].length)];
+                        chat.appendChild(responseBubble);
+                        chat.scrollTop = chat.scrollHeight;
+                    }, 1000);
+                  
+                    chat.scrollTop = chat.scrollHeight;
+                }
+            }
+        }
+        function selectEmotionWithBurst(event, emotion, emoji) {
+            createBurstAnimation(event.target, emoji);
+            showEmotionTip(emotion);
+        }
+        function createBurstAnimation(element, emoji) {
+            const emojiCount = 15 + Math.floor(Math.random() * 6);
+            for (let i = 0; i < emojiCount; i++) {
+                const burstEmoji = document.createElement('div');
+                burstEmoji.className = 'burst-emoji';
+                burstEmoji.textContent = emoji;
+              
+                const isLeft = Math.random() < 0.5;
+                const startX = isLeft ? Math.random() * 100 : window.innerWidth - Math.random() * 100;
+                const startY = window.innerHeight - Math.random() * 50;
+              
+                burstEmoji.style.left = startX + 'px';
+                burstEmoji.style.top = startY + 'px';
+                burstEmoji.style.animation = `bottomToLeft 3s ease-out forwards`;
+                burstEmoji.style.animationDelay = (i * 0.08) + 's';
+              
+                document.body.appendChild(burstEmoji);
+              
+                setTimeout(() => burstEmoji.remove(), 3000);
+            }
+        }
+        function showEmotionTip(emotion) {
+            document.querySelectorAll('.emotion-tip').forEach(tip => {
+                tip.style.display = 'none';
+            });
+          
+            const tipId = 'tip-' + emotion;
+            const tip = document.getElementById(tipId);
+            if (tip) {
+                tip.style.display = 'block';
+            }
+        }
+        // Diary functions
+        function saveDiaryEntry() {
+            const input = document.getElementById('diaryInput');
+            const text = input.value.trim();
+          
+            if (text) {
+                const entries = getDiaryEntries();
+                const newEntry = {
+                    id: Date.now(),
+                    date: new Date().toLocaleString('kk-KZ'),
+                    content: text
+                };
+              
+                entries.unshift(newEntry);
+                localStorage.setItem('diaryEntries', JSON.stringify(entries));
+              
+                input.value = '';
+                renderDiaryEntries();
+            }
+        }
+        function getDiaryEntries() {
+            const stored = localStorage.getItem('diaryEntries');
+            return stored ? JSON.parse(stored) : [];
+        }
+        function deleteDiaryEntry(id) {
+            const entries = getDiaryEntries();
+            const filtered = entries.filter(entry => entry.id !== id);
+            localStorage.setItem('diaryEntries', JSON.stringify(filtered));
+            renderDiaryEntries();
+        }
+        function renderDiaryEntries() {
+            const container = document.getElementById('diaryEntries');
+            const entries = getDiaryEntries();
+          
+            if (entries.length === 0) {
+                container.innerHTML = '<p style="color: #B0B0B0; text-align: center;">Әлі жазбалар жоқ</p>';
+                return;
+            }
+          
+            container.innerHTML = entries.map(entry => `
+                <div class="diary-entry">
+                    <div class="date">📅 ${entry.date}</div>
+                    <div class="content">${entry.content}</div>
+                    <button class="delete-btn" onclick="deleteDiaryEntry(${entry.id})">🗑️ Өшіру</button>
+                </div>
+            `).join('');
+        }
+        // Close modals when clicking outside
+        window.onclick = function(event) {
+            if (event.target.classList.contains('modal')) {
+                event.target.classList.remove('show');
+                setTimeout(() => event.target.style.display = 'none', 300);
+            }
+        }
+        // Element SDK Implementation
+        async function onConfigChange(config) {
+            document.getElementById('app-title').textContent = config.app_title || defaultConfig.app_title;
+            document.getElementById('tagline-1').textContent = config.tagline_1 || defaultConfig.tagline_1;
+            document.getElementById('tagline-2').textContent = config.tagline_2 || defaultConfig.tagline_2;
+            document.getElementById('welcome-message').textContent = config.welcome_message || defaultConfig.welcome_message;
+            document.getElementById('subtitle-text').textContent = config.subtitle_text || defaultConfig.subtitle_text;
+        }
+        function mapToCapabilities(config) {
+            return {
+                recolorables: [],
+                borderables: [],
+                fontEditable: undefined,
+                fontSizeable: undefined
+            };
+        }
+        function mapToEditPanelValues(config) {
+            return new Map([
+                ["app_title", config.app_title || defaultConfig.app_title],
+                ["tagline_1", config.tagline_1 || defaultConfig.tagline_1],
+                ["tagline_2", config.tagline_2 || defaultConfig.tagline_2],
+                ["welcome_message", config.welcome_message || defaultConfig.welcome_message],
+                ["subtitle_text", config.subtitle_text || defaultConfig.subtitle_text]
+            ]);
+        }
+        // Initialize
+        if (window.elementSdk) {
+            window.elementSdk.init({
+                defaultConfig,
+                onConfigChange,
+                mapToCapabilities,
+                mapToEditPanelValues
+            });
+        }
+        // Load diary entries on page load
+        renderDiaryEntries();
+
+        // Toggle subsection function
+        function toggleSubsection(event) {
+            const li = event.currentTarget;
+            li.classList.toggle('active');
+        }
+    </script>
+ <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'99ff799330c9e4bf',t:'MTc2MzM4NTA5Ni4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</html>
